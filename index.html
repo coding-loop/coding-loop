@@ -1,265 +1,217 @@
-<style>
-* { box-sizing:border-box; margin:0; padding:0; }
-.header {
-  text-align: center;
-  padding-bottom: 24px;
-  border-bottom: 1px solid var(--color-border-tertiary, #d3d1c7);
-  margin-bottom: 32px;
-}
-.header h1 {
-  font: 600 17px var(--font-sans, sans-serif);
-  color: var(--color-text-primary, #1a1a18);
-  margin-bottom: 5px;
-}
-.header p {
-  font: 400 12px var(--font-sans, sans-serif);
-  color: var(--color-text-secondary, #5f5e5a);
-  margin-bottom: 20px;
-}
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 20px;
-  justify-content: center;
-  font-size: 12px;
-  color: var(--color-text-secondary, #5f5e5a);
-}
-.li { display: flex; align-items: center; gap: 6px; }
-.dot { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
-.block { margin-bottom: 36px; }
-.block-title {
-  font: 600 13px var(--font-sans, monospace);
-  color: var(--color-text-secondary, #5f5e5a);
-  margin-bottom: 10px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--color-border-tertiary, #d3d1c7);
-}
-pre {
-  font: 400 13px/1.7 var(--font-mono, monospace);
-  white-space: pre;
-  color: var(--color-text-primary, #1a1a18);
-}
-.g { color: #16a34a; font-weight: 600; }
-.r { color: #dc2626; font-weight: 600; }
-.b { color: #1d4ed8; font-weight: 600; }
-.footer {
-  margin-top: 40px;
-  padding-top: 18px;
-  border-top: 1px solid var(--color-border-tertiary, #d3d1c7);
-  text-align: center;
-  font: 400 12px var(--font-sans, sans-serif);
-  color: var(--color-text-tertiary, #888780);
-  line-height: 2;
-}
-.footer strong {
-  font-weight: 600;
-  color: var(--color-text-secondary, #5f5e5a);
-}
-.credits-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px 8px;
-  margin-top: 10px;
-}
-.credits-row span {
-  display: inline-block;
-  padding: 3px 12px;
-  border-radius: 20px;
-  font-weight: 600;
-  font-size: 12px;
-  border: 1px solid var(--color-border-secondary, #c0bdb4);
-  color: var(--color-text-secondary, #5f5e5a);
-}
-.generated {
-  margin-top: 10px;
-  font-size: 12px;
-  color: var(--color-text-tertiary, #888780);
-}
-</style>
+<!DOCTYPE html>
+<html>  
+    <head>
+      <meta lang="pt-br">
+      <meta charset='utf-8'/>
+      <meta content='width=device-width, initial-scale=1.0' name='viewport'/>
+      <title>Coding Loop</title>
+      <b:skin><![CDATA[
+      
+        /* Estilização base do H5 */
+        
+		h5 {
+            font-family: 'Courier New', Courier, monospace; /* Estilo de código */
+            display: flex;
+  			flex-wrap: wrap; /* Permite que as letras quebrem linha no celular se faltar espaço */
+            align-items: center;
+            gap: 2px;
+		}
 
-<div class="header">
-  <h1>Evolução dos tipos primitivos em C</h1>
-  <p>Histórico acumulativo das mudanças e adições por padrão ISO — C89 → C99 → C11 → C23</p>
-  <div class="legend">
-    <div class="li"><div class="dot" style="background:var(--color-text-primary,#1a1a18);border:1px solid #888780"></div>C89 / C90 — base original</div>
-    <div class="li"><div class="dot" style="background:#16a34a"></div>C99 — adicionado / precisado</div>
-    <div class="li"><div class="dot" style="background:#dc2626"></div>C11 — adicionado / precisado</div>
-    <div class="li"><div class="dot" style="background:#1d4ed8"></div>C23 — adicionado / movido / removido</div>
-  </div>
-</div>
+        /* Aplica a animação de piscar em cada caractere individual */
+        
+		h5 span.letra {
+            display: inline-block;
+            animation: piscar 1.9s infinite both;
+            /* Multiplica o índice da letra por 0.1s para criar o efeito cascata */
+            animation-delay: calc(var(--i) * 0.1s);
+        }
 
-<div class="block">
-<div class="block-title">① C89 / C90 — base original</div>
-<pre>
-C89 / C90
-├── Tipos aritméticos
-│   ├── Tipos inteiros
-│   │   ├── char
-│   │   ├── signed char
-│   │   ├── unsigned char
-│   │   ├── short int
-│   │   ├── unsigned short int
-│   │   ├── int
-│   │   ├── unsigned int
-│   │   ├── long int
-│   │   └── unsigned long int
-│   └── Tipos de ponto flutuante
-│       ├── float
-│       ├── double
-│       └── long double
-├── void
-└── enum
-</pre>
-</div>
+        /* Animação de rotação para a barra (/) no final */
+        .slash-rotating {
+            display: inline-block;
+            animation: rodar 1.5s linear infinite;
+            margin-left: 5px;
+        }
 
-<div class="block">
-<div class="block-title">② C89 + C99 — <span class="g">verde = adicionado/precisado em C99</span></div>
-<pre>
-C89 / C90 + C99
-├── Tipos aritméticos
-│   ├── Tipos inteiros
-│   │   ├── char
-│   │   ├── signed char
-│   │   ├── unsigned char
-│   │   ├── short int
-│   │   ├── unsigned short int
-│   │   ├── int
-│   │   ├── unsigned int
-│   │   ├── long int
-│   │   ├── unsigned long int
-│   │   ├── <span class="g">long long int               ← NOVO C99</span>
-│   │   ├── <span class="g">unsigned long long int      ← NOVO C99</span>
-│   │   └── <span class="g">_Bool                       ← NOVO C99</span>
-│   ├── Tipos de ponto flutuante real
-│   │   ├── float
-│   │   ├── double
-│   │   └── <span class="g">long double                 ← PRECISADO C99</span>
-│   └── <span class="g">Tipos complexos             ← NOVO C99</span>
-│       ├── <span class="g">float _Complex</span>
-│       ├── <span class="g">double _Complex</span>
-│       ├── <span class="g">long double _Complex</span>
-│       ├── <span class="g">float _Imaginary            ← NOVO C99 · opcional</span>
-│       ├── <span class="g">double _Imaginary</span>
-│       └── <span class="g">long double _Imaginary</span>
-├── void
-├── enum
-└── <span class="g">&lt;stdint.h&gt;                      ← NOVO C99</span>
-    ├── <span class="g">int8_t … int64_t</span>
-    ├── <span class="g">uint8_t … uint64_t</span>
-    ├── <span class="g">int_least8_t … int_least64_t</span>
-    ├── <span class="g">int_fast8_t … int_fast64_t</span>
-    ├── <span class="g">intptr_t / uintptr_t</span>
-    └── <span class="g">intmax_t / uintmax_t</span>
-</pre>
-</div>
+        /* Regra da animação de piscar (opacidade) */
+        @keyframes piscar {
+            0%, 100% {
+                opacity: 0.2;
+            }
+            20% {
+                opacity: 1;
+            }
+        }
 
-<div class="block">
-<div class="block-title">③ C89 + C99 + C11 — <span class="r">vermelho = adicionado/precisado em C11</span></div>
-<pre>
-C89 / C90 + C99 + C11
-├── Tipos aritméticos
-│   ├── Tipos inteiros
-│   │   ├── char
-│   │   ├── signed char
-│   │   ├── unsigned char
-│   │   ├── short int
-│   │   ├── unsigned short int
-│   │   ├── int
-│   │   ├── unsigned int
-│   │   ├── long int
-│   │   ├── unsigned long int
-│   │   ├── <span class="g">long long int</span>
-│   │   ├── <span class="g">unsigned long long int</span>
-│   │   └── <span class="g">_Bool                       ← PRECISADO C11</span>
-│   ├── Tipos de ponto flutuante real
-│   │   ├── float
-│   │   ├── double
-│   │   └── <span class="g">long double</span>
-│   └── <span class="g">Tipos complexos</span>
-│       ├── <span class="g">float _Complex              ← PRECISADO C11 · suporte opcional</span>
-│       ├── <span class="g">double _Complex</span>
-│       ├── <span class="g">long double _Complex</span>
-│       ├── <span class="g">float _Imaginary            ← PRECISADO C11 · na prática abandonado</span>
-│       ├── <span class="g">double _Imaginary</span>
-│       └── <span class="g">long double _Imaginary</span>
-├── void
-├── enum
-├── <span class="g">&lt;stdint.h&gt;</span>
-│   ├── <span class="g">int8_t … int64_t</span>
-│   ├── <span class="g">uint8_t … uint64_t</span>
-│   ├── <span class="g">int_least8_t … int_least64_t</span>
-│   ├── <span class="g">int_fast8_t … int_fast64_t</span>
-│   ├── <span class="g">intptr_t / uintptr_t</span>
-│   └── <span class="g">intmax_t / uintmax_t</span>
-├── <span class="r">char16_t                        ← NOVO C11 · &lt;uchar.h&gt; · UTF-16</span>
-├── <span class="r">char32_t                        ← NOVO C11 · &lt;uchar.h&gt; · UTF-32</span>
-└── <span class="r">_Atomic(T)                      ← NOVO C11 · tipo atômico genérico</span>
-</pre>
-</div>
+        /* Regra da animação de rotação */
+        @keyframes rodar {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+      
+    ]]></b:skin>
+  </head>  
+  <body>
+    <h5>
+      <span class='slash-rotating'>/</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:1'>0</span>
+      <span class='letra' style='--i:2'>0</span>
+      <span class='letra' style='--i:3'>1</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:4'>1</span>
+      <span class='letra' style='--i:5'>1</span>
+      <span class='letra' style='--i:6'>0</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:7'>.</span>
+      <span class='letra' style='--i:8'>.</span>
+      <span class='letra' style='--i:9'>.</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:1'>C</span>
+      <span class='letra' style='--i:2'>o</span>
+      <span class='letra' style='--i:3'>d</span>
+      <span class='letra' style='--i:4'>i</span>
+      <span class='letra' style='--i:5'>n</span>
+      <span class='letra' style='--i:6'>g</span>
+      <span>&#160;</span> 
+      <span class='letra' style='--i:7'>L</span>
+      <span class='letra' style='--i:8'>o</span>
+      <span class='letra' style='--i:9'>o</span>
+      <span class='letra' style='--i:10'>p</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:12'>.</span>
+      <span class='letra' style='--i:13'>.</span>
+      <span class='letra' style='--i:14'>.</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:1'>1</span>
+      <span class='letra' style='--i:2'>0</span>
+      <span class='letra' style='--i:3'>1</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:4'>1</span>
+      <span class='letra' style='--i:5'>1</span>
+      <span class='letra' style='--i:6'>0</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:7'>0</span>
+      <span class='letra' style='--i:8'>0</span>
+      <span class='letra' style='--i:9'>1</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:1'>.</span>
+      <span class='letra' style='--i:2'>.</span>
+      <span class='letra' style='--i:3'>.</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:4'>C</span>
+      <span class='letra' style='--i:5'>o</span>
+      <span class='letra' style='--i:6'>d</span>
+      <span class='letra' style='--i:7'>i</span>
+      <span class='letra' style='--i:8'>n</span>
+      <span class='letra' style='--i:9'>g</span>
+      <span>&#160;</span> 
+      <span class='letra' style='--i:10'>L</span>
+      <span class='letra' style='--i:11'>o</span>
+      <span class='letra' style='--i:12'>o</span>
+      <span class='letra' style='--i:13'>p</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:14'>.</span>
+      <span class='letra' style='--i:15'>.</span>
+      <span class='letra' style='--i:16'>.</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:1'>0</span>
+      <span class='letra' style='--i:2'>0</span>
+      <span class='letra' style='--i:3'>1</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:4'>1</span>
+      <span class='letra' style='--i:5'>1</span>
+      <span class='letra' style='--i:6'>0</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:7'>1</span>
+      <span class='letra' style='--i:8'>0</span>
+      <span class='letra' style='--i:9'>1</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:1'>1</span>
+      <span class='letra' style='--i:2'>0</span>
+      <span class='letra' style='--i:3'>1</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:4'>.</span>
+      <span class='letra' style='--i:5'>.</span>
+      <span class='letra' style='--i:6'>.</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:7'>C</span>
+      <span class='letra' style='--i:8'>o</span>
+      <span class='letra' style='--i:9'>d</span>
+      <span class='letra' style='--i:10'>i</span>
+      <span class='letra' style='--i:11'>n</span>
+      <span class='letra' style='--i:12'>g</span>
+      <span>&#160;</span> 
+      <span class='letra' style='--i:13'>L</span>
+      <span class='letra' style='--i:14'>o</span>
+      <span class='letra' style='--i:15'>o</span>
+      <span class='letra' style='--i:16'>p</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:17'>.</span>
+      <span class='letra' style='--i:18'>.</span>
+      <span class='letra' style='--i:19'>.</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:1'>1</span>
+      <span class='letra' style='--i:2'>1</span>
+      <span class='letra' style='--i:3'>0</span>
+      <span>&#160;</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:4'>1</span>
+      <span class='letra' style='--i:5'>0</span>
+      <span class='letra' style='--i:6'>0</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:7'>1</span>
+      <span class='letra' style='--i:1'>1</span>
+      <span class='letra' style='--i:2'>0</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:3'>1</span>
+      <span class='letra' style='--i:4'>1</span>
+      <span class='letra' style='--i:5'>1</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:6'>0</span>
+      <span class='letra' style='--i:7'>0</span>
+      <span class='letra' style='--i:8'>0</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:9'>.</span>
+      <span class='letra' style='--i:10'>.</span>
+      <span class='letra' style='--i:11'>.</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:12'>C</span>
+      <span class='letra' style='--i:5'>o</span>
+      <span class='letra' style='--i:6'>d</span>
+      <span class='letra' style='--i:7'>i</span>
+      <span class='letra' style='--i:8'>n</span>
+      <span class='letra' style='--i:9'>g</span>
+      <span>&#160;</span> 
+      <span class='letra' style='--i:10'>L</span>
+      <span class='letra' style='--i:11'>o</span>
+      <span class='letra' style='--i:12'>o</span>
+      <span class='letra' style='--i:13'>p</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:14'>.</span>
+      <span class='letra' style='--i:15'>.</span>
+      <span class='letra' style='--i:1'>.</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:2'>1</span>
+      <span class='letra' style='--i:3'>0</span>
+      <span class='letra' style='--i:4'>1</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:5'>0</span>
+      <span class='letra' style='--i:6'>1</span>
+      <span class='letra' style='--i:7'>0</span>
+      <span>&#160;</span>
+      <span class='letra' style='--i:8'>.</span>
+      <span class='letra' style='--i:9'>.</span>
+      <span class='letra' style='--i:10'>.</span>
+      <span class='slash-rotating'>/</span>
+    </h5>
+    <h1> Coding Loop ... </h1>
+    <b:section id='main-content' showaddelement='yes'/>
+  
 
-<div class="block">
-<div class="block-title">④ C89 + C99 + C11 + C23 — <span class="b">azul = adicionado/movido/removido em C23</span></div>
-<pre>
-C89 / C90 + C99 + C11 + C23
-├── Tipos aritméticos
-│   ├── Tipos inteiros
-│   │   ├── char
-│   │   ├── signed char
-│   │   ├── unsigned char
-│   │   ├── short int
-│   │   ├── unsigned short int
-│   │   ├── int
-│   │   ├── unsigned int
-│   │   ├── long int
-│   │   ├── unsigned long int
-│   │   ├── <span class="g">long long int</span>
-│   │   ├── <span class="g">unsigned long long int</span>
-│   │   ├── <span class="g">_Bool</span>
-│   │   ├── <span class="b">bool                        ← MOVIDO C23 · macro → palavra-chave nativa</span>
-│   │   ├── <span class="b">_BitInt(N)                  ← NOVO C23 · inteiro de largura arbitrária</span>
-│   │   └── <span class="b">unsigned _BitInt(N)         ← NOVO C23</span>
-│   ├── Tipos de ponto flutuante real
-│   │   ├── float
-│   │   ├── double
-│   │   ├── <span class="g">long double</span>
-│   │   ├── <span class="b">_Float16                    ← NOVO C23 · IEEE 754 binary16</span>
-│   │   ├── <span class="b">_Float32                    ← NOVO C23 · IEEE 754 binary32</span>
-│   │   ├── <span class="b">_Float64                    ← NOVO C23 · IEEE 754 binary64</span>
-│   │   └── <span class="b">_Float128                   ← NOVO C23 · IEEE 754 binary128</span>
-│   └── <span class="g">Tipos complexos</span>
-│       ├── <span class="g">float _Complex</span>
-│       ├── <span class="g">double _Complex</span>
-│       ├── <span class="g">long double _Complex</span>
-│       └── <span class="b">_Imaginary                  ← REMOVIDO C23 · retirado do padrão</span>
-├── void
-├── <span class="b">enum                            ← PRECISADO C23 · tipo subjacente declarável</span>
-├── <span class="g">&lt;stdint.h&gt;</span>
-│   ├── <span class="g">int8_t … int64_t</span>
-│   ├── <span class="g">uint8_t … uint64_t</span>
-│   ├── <span class="g">int_least8_t … int_least64_t</span>
-│   ├── <span class="g">int_fast8_t … int_fast64_t</span>
-│   ├── <span class="g">intptr_t / uintptr_t</span>
-│   └── <span class="g">intmax_t / uintmax_t</span>
-├── <span class="r">char16_t</span>
-├── <span class="r">char32_t</span>
-├── <span class="r">_Atomic(T)</span>
-├── <span class="b">true / false                    ← MOVIDO C23 · macros → literais nativos</span>
-└── <span class="b">Removidos em C23</span>
-    ├── <span class="b">gets()                      ← REMOVIDA · função da biblioteca padrão</span>
-    └── <span class="b">K&R function declarations    ← REMOVIDAS · sintaxe sem protótipo</span>
-</pre>
-</div>
-
-<div class="footer">
-  <div><strong>Referências:</strong> ISO/IEC 9899:1990 (C89/C90) · ISO/IEC 9899:1999 (C99) · ISO/IEC 9899:2011 (C11) · ISO/IEC 9899:2024 (C23)</div>
-  <div class="credits-row">
-    <span>S.ss.N</span>
-    <span>Claude — Anthropic</span>
-    <span>Grok — xAI</span>
-    <span>ChatGPT — OpenAI</span>
-    <span>Gemini — Google</span>
-    <span>Perplexity</span>
-  </div>
-  <div class="generated">Gerado por <strong>Claude.ai — Anthropic</strong> · claude.ai · anthropic.com</div>
-</div>
+</body>
+</html>
