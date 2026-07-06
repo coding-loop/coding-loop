@@ -433,8 +433,40 @@
         padding: 0 12px;
       }
     }
+    .site-logo{
+		position: fixed;
+		width: 60px;      /* Altere este valor para aumentar ou diminuir */
+        height: auto;     /* Mantém a proporção original */
+        display: block;   /* Remove pequenos espaços extras abaixo da imagem */
+		margin: 5px auto auto 5px;
+}
+	.site-name {
+		position: fixed;
+		margin: 7px auto auto 70px;
+		font-family: 'Courier New', courier , monospace;
+		font-size: 35px;
+		font-weight: bold;
+		color: #f4f4f9;
+	}
+	
+     .site-logoG {
+        width: 250px;      /* Aumente ou diminua este valor conforme necessário (ex: 100px, 200px) */
+        height: auto;      /* Mantém a proporção original da imagem */
+        display: block;    /* Remove espaços extras */
+        position: fixed;   /* Mantém a posição fixa no topo */
+        margin: 220px auto auto 120px; /* Ajuste as margens para alinhar com a outra logo */
+      }
   </style>
 </head>
+
+  <header class='site-branding'>
+  <a href='/' title='Ir para a página inicial do Coding Loop'>
+    <img alt='Logo do Coding Loop: Editor de Código' class='site-logo' src='https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhAhvH9upKxyeGU0ifjKJTFWPz7sOI-5XYpE3rd8rlkCD-8G4iK9HXBK25iGT6lnbwQ_opazvBUUyxymxJmpRzfcVBEgR8OBx1mGyvkwllwP6OS9wYW-qw_J_U6KdHa_UYybRHMdVZz9rg6q_8i7LwBUne-QV4ENr4NQBhB-9sbMt5LHA/s1600/white.-logo.webp'/>
+     <h1 class='site-name'>Coding-Loop</h1>
+  </a>
+    <img alt='Logo do Coding Loop: Editor de Código' class='site-logoG' src='https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgpa2ZmF6eA2EjXT6fON5pbbxG_XHdacuK_g_SWKjhNmlpC5o10lPFLH9E60MjO_duzIVSqpycFfdlSTTo42FCJYlnZXnICXhIAicGTzK2JRlOYUF4OUV7Jc72qtCOGLmMho07PhfUW7FV1hsFx1y_nZzh_laSRiqleyL2cl7kxKtk-Ag/s1600/Gemini_Generated_Image_gny8zjgny8zjgny8-removebg.png'/>
+</header>
+  
 <body>
   <div class="browser-window" id="main-window-container">
     <div class="browser-tabs">
