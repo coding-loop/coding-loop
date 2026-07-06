@@ -1,428 +1,992 @@
 <!DOCTYPE html>
-<html lang='pt-BR'> 
+<html lang="pt-BR">
 <head>
-  <meta charset='UTF-8'/>
-  <meta content='width=device-width, initial-scale=1.0' name='viewport'/>
-  <title>Coding-Loop</title>
+  <meta charset="UTF-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Editor Code com Preview em Tempo Real</title>
 
- <style type='text/css'>
+  <!-- Ace Editor -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.2/ace.js" type="text/javascript"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.2/mode-html.js" type="text/javascript"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.2/mode-css.js" type="text/javascript"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.2/mode-javascript.js" type="text/javascript"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.36.2/theme-solarized_dark.js" type="text/javascript"></script>
+
+  <style type="text/css">
     * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      box-sizing: border-box;
     }
 
     body {
-        background-color: #002b36;  
-        color: #333;
-        display: flex;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #0f141c;
+      color: #fff;
+    }
+
+    .browser-window {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 9999;
+      display: flex;
+      width: 66.6%;
+      max-width: 1300px;
+      height: 100vh;
+      flex-direction: column;
+      overflow: hidden;
+      background: #161b22;
+      border: 2px solid #30363d;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+      transition: height 0.2s ease, width 0.2s ease, max-width 0.2s ease, border-radius 0.2s ease;
+    }
+
+    .browser-window.is-fullscreen {
+      left: 0;
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+
+    .browser-window.is-collapsed {
+      bottom: auto;
+      width: auto !important;
+      max-width: max-content !important;
+      height: 32px !important;
+      min-height: 32px !important;
+      border-top: none;
+      border-right: none;
+      border-radius: 0 0 0 8px;
+    }
+
+    .browser-window.is-collapsed .maximize-btn,
+    .browser-window.is-collapsed .toolbar-btn,
+    .browser-window.is-collapsed .browser-tabs-right {
+      display: none !important;
+    }
+
+    .browser-window.is-collapsed .browser-tabs {
+      border-bottom: none;
+    }
+
+    .browser-tabs {
+      display: flex;
+      width: 100%;
+      height: 30px;
+      min-height: 30px;
+      align-items: stretch;
+      justify-content: space-between;
+      overflow: hidden;
+      background: #0f141c;
+      border-bottom: 2px solid #30363d;
+    }
+
+    .browser-tabs-left,
+    .browser-tabs-right {
+      display: flex;
+      height: 100%;
+      align-items: stretch;
+    }
+
+    .tab-btn,
+    .maximize-btn,
+    .toolbar-btn,
+    .tab-action-btn {
+      display: flex;
+      height: 100%;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: transparent;
+      color: #8b949e;
+      cursor: pointer;
+      font-family: inherit;
+      user-select: none;
+    }
+
+    .tab-btn {
+      gap: 6px;
+      padding: 0 16px;
+      border-right: 1px solid #30363d;
+      border-left: 1px solid #30363d;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+      transition: color 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+    }
+
+    .tab-btn:first-child {
+      border-left: none;
+    }
+
+    .tab-btn:hover,
+    .tab-btn:focus-within,
+    .maximize-btn:hover,
+    .maximize-btn:focus,
+    .toolbar-btn:hover,
+    .toolbar-btn:focus,
+    .tab-action-btn:hover,
+    .tab-action-btn:focus {
+      background: #161b22;
+      color: #4ab5f7;
+      outline: none;
+    }
+
+    .tab-btn.active {
+      background: #161b22;
+      color: #4ab5f7;
+      font-weight: 600;
+      border-bottom: 2px solid #4ab5f7;
+    }
+
+    .tab-btn.dragging {
+      opacity: 0.45;
+      background: #21262d;
+    }
+
+    .ide-toggle-btn {
+      color: #8b949e;
+      font-weight: 600;
+    }
+
+    .ide-toggle-btn.window-open {
+      background: #161b22;
+      color: #4ab5f7;
+    }
+
+    .editor-toggle-checkbox {
+      width: 14px;
+      height: 14px;
+      margin: 0;
+      cursor: pointer;
+      accent-color: #4ab5f7;
+    }
+
+    .tab-text {
+      margin-left: 4px;
+    }
+
+    .maximize-btn,
+    .toolbar-btn {
+      padding: 0 14px;
+      border-right: 1px solid #30363d;
+      border-left: 1px solid #30363d;
+      transition: color 0.15s ease, background 0.15s ease;
+    }
+
+    .maximize-btn svg,
+    .toolbar-btn svg,
+    .tab-action-btn svg,
+    .live-toggle-btn svg,
+    .preview-btn svg {
+      fill: currentColor;
+    }
+
+    .maximize-btn svg,
+    .toolbar-btn svg,
+    .tab-action-btn svg,
+    .preview-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .toolbar-btn {
+      width: 38px;
+      padding: 0;
+    }
+
+    .tab-action-btn {
+      width: 22px;
+      height: 22px;
+      margin-left: 4px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      color: #f97316;
+      transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .tab-action-btn:hover,
+    .tab-action-btn:focus {
+      color: #fb4b14;
+      border-color: #fb4b14;
+    }
+
+    .tab-action-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .tab-action-btn.clear-feedback {
+      background: transparent !important;
+      border-color: transparent !important;
+    }
+
+    .file-input-hidden {
+      display: none;
+    }
+
+    .live-toggle-btn {
+      margin-left: auto;
+      font-weight: 600;
+    }
+
+    .live-toggle-btn svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .window-content {
+      display: flex;
+      width: 100%;
+      height: calc(100% - 30px);
+      flex-direction: column;
+      overflow: hidden;
+      background: #161b22;
+      transition: height 0.2s ease, visibility 0.2s ease;
+    }
+
+    .window-content.hide-entire-window {
+      display: none !important;
+      height: 0 !important;
+      min-height: 0 !important;
+      visibility: hidden;
+    }
+
+    .editors-area {
+      display: grid;
+      width: 100%;
+      height: 100%;
+      grid-template-columns: 1fr;
+      overflow: hidden;
+      background: #161b22;
+      transition: height 0.2s ease;
+    }
+
+    .editors-area.split-2 {
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: #30363d;
+    }
+
+    .editors-area.split-3 {
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1px;
+      background: #30363d;
+    }
+
+    .tab-pane {
+      position: relative;
+      display: none;
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+      overflow: hidden;
+      background: #161b22;
+    }
+
+    .tab-pane.show-pane {
+      display: block;
+    }
+
+    .ace-container {
+      width: 100%;
+      height: 100%;
+    }
+
+    .preview-area {
+      position: relative;
+      display: none;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      border-top: 2px solid #30363d;
+      transition: height 0.2s ease;
+    }
+
+    .preview-area.show-preview {
+      display: block;
+    }
+
+    .preview-controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 10;
+      display: flex;
+      gap: 8px;
+    }
+
+    .preview-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 28px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      color: #fff;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .preview-btn-square {
+      padding: 6px;
+      background: #30363d;
+      border: 1px solid #8b949e;
+    }
+
+    .preview-btn-layout.is-active {
+      background: #161b22;
+      color: #4ab5f7;
+      border-color: #4ab5f7;
+    }
+
+    .preview-btn-square:hover,
+    .preview-btn-square:focus,
+    .preview-btn-layout:hover,
+    .preview-btn-layout:focus {
+      background: #161b22;
+      color: #4ab5f7;
+      border-color: #4ab5f7;
+      outline: none;
+    }
+
+    /* ===== Modo horizontal (padrão): editores em cima, preview embaixo ===== */
+    .window-content.with-preview .editors-area {
+      height: 50%;
+    }
+
+    .window-content.with-preview .preview-area {
+      height: 50%;
+    }
+
+    /* ===== Modo vertical: editores e preview lado a lado, proporção dinâmica via JS ===== */
+    .window-content.with-preview.preview-vertical {
+      flex-direction: row;
+      gap: 1px;
+      background: #30363d;
+    }
+
+    /*
+      display: contents remove a "caixa" do .editors-area, fazendo cada
+      .tab-pane visível virar filho direto do .window-content (flex row).
+      Assim, panes e preview disputam espaço igualmente como itens de
+      flexbox — a divisão exata (50%, 33.3%, 25%...) é calculada e
+      aplicada via flex-basis pelo JavaScript (aplicarProporcaoVertical).
+    */
+    .window-content.with-preview.preview-vertical .editors-area {
+      display: contents;
+    }
+
+    .window-content.with-preview.preview-vertical .tab-pane.show-pane,
+    .window-content.with-preview.preview-vertical .preview-area {
+      flex: 1 1 0;
+      width: auto;
+      height: 100%;
+      min-width: 0;
+      min-height: 0;
+      border-top: none;
+    }
+
+    .preview-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #fff;
+    }
+
+    @media (max-width: 900px) {
+      .browser-window {
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .browser-tabs {
+        overflow-x: auto;
+      }
+
+      .editors-area.split-2,
+      .editors-area.split-3 {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(auto-fit, minmax(140px, 1fr));
+      }
+
+      .window-content.with-preview.preview-vertical {
         flex-direction: column;
-        min-height: 100vh;
-    }
+      }
 
-    /* Barra de Navegação */
-    header {
-        background-color: #011524;
-        padding: 15px 20px; 
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        margin: 10px;          
-        border-radius: 8px;    
-        color: #ffffff;
-    }
-
-    /* Alinhamento flexível para a logo e o texto */
-    .site-logo a {
-        display: flex;
-        align-items: center; 
-        text-decoration: none;
-    }
-
-    /* Estilo da Imagem */
-    .site-logo .logo {
-        width: 50px;
-        height: auto;
-        display: block;
-    }
-
-    /* Estilo do Texto */
-    .site-logo .name {
-        font-family: 'Courier New', Courier, monospace;
-        font-size: 28px;
-        font-weight: bold;
-        color: #f4f4f9;
-        margin-left: 10px; 
-    }
-
-    nav {
-        display: flex;
-        align-items: center;
-    }
-
-    nav a {
-        text-decoration: none;
-        color: #2aa198;
-        margin-left: 20px;
-        font-weight: 500;
-        transition: color 0.3s;
-    }
-
-    nav a:hover {
-        color: #ff5722;
-    }
-
-    .btn-login {
-        color: #2aa198;
-        padding: 8px 18px;
-        border-radius: 20px;
-        transition: all 0.3s;
-    }
-
-    .btn-login:hover {
-        background-color: #ff5722;
-        color: #fff !important;
-    }
-
-    /* Seção Principal (Home) */
-    .hero {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        padding: 40px 20px;
-    }
-
-    .hero h1 {
-        font-size: 48px;
-        margin-bottom: 20px;
-        color: #f4f4f9;
-    }
-
-    .hero p {
-        font-size: 18px;
-        color: #93a1a1;
-        max-width: 600px;
-        margin-bottom: 30px;
-    }
-
-    /* Botão de Teste do Editor */
-    .container-teste {
-        text-align: center;
-        margin-bottom: 40px;
-    }
-
-    .btn-editor-teste {
-        background-color: #2aa198;
-        color: #011524;
-        padding: 12px 24px;
-        border: none;
-        border-radius: 5px;
-        font-size: 16px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: background-color 0.3s, transform 0.2s;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-    }
-
-    .btn-editor-teste:hover {
-        background-color: #268bd2;
-        color: #fff;
-        transform: translateY(-2px);
-    }
-
-    /* Modal de Login / Cadastro */
-    .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
+      .window-content.with-preview.preview-vertical .tab-pane.show-pane,
+      .window-content.with-preview.preview-vertical .preview-area {
         width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.6);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.3s ease;
-        z-index: 9999;
-    }
+        height: auto !important;
+      }
 
-    .modal-overlay.active {
-        opacity: 1;
-        pointer-events: auto;
-    }
+      .window-content.with-preview.preview-vertical .preview-area {
+        border-left: none;
+      }
 
-    .login-card {
-        background: #fff;
-        padding: 40px;
-        border-radius: 10px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        width: 100%;
-        max-width: 400px;
-        position: relative;
-    }
-
-    .close-btn {
-        position: absolute;
-        top: 15px;
-        right: 20px;
-        font-size: 24px;
-        cursor: pointer;
-        color: #999;
-    }
-
-    .login-card h2 {
-        margin-bottom: 20px;
-        color: #333;
-    }
-
-    .input-group {
-        margin-bottom: 20px;
-        text-align: left;
-    }
-
-    .input-group label {
-        display: block;
-        margin-bottom: 5px;
-        color: #666;
-        font-size: 14px;
-    }
-
-    .input-group input {
-        width: 100%;
-        padding: 12px;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        font-size: 16px;
-        outline: none;
-    }
-
-    .input-group input:focus {
-        border-color: #ff5722;
-    }
-
-    .btn-submit {
-        width: 100%;
-        padding: 12px;
-        background-color: #ff5722;
-        color: white;
-        font-size: 16px;
-        cursor: pointer;
-        font-weight: bold;
-        margin-top: 10px;
-        border: none;
-        border-radius: 5px;
-    }
-
-    .btn-submit:hover {
-        background-color: #e64a19;
-    }
-
-    .switch-form {
-        margin-top: 20px;
-        font-size: 14px;
-        color: #666;
-    }
-
-    .switch-form a {
-        color: #ff5722;
-        text-decoration: none;
-        font-weight: bold;
-    }
-
-    .switch-form a:hover {
-        text-decoration: underline;
-    }
-
-    .hidden {
-        display: none;
+      .tab-btn {
+        padding: 0 12px;
+      }
     }
   </style>
 </head>
-
 <body>
-    <!-- Header -->
-    <header>
-        <div class='site-logo'>
-            <a href='/' title='Ir para a página inicial do Coding Loop'>
-                <img alt='Logo do Coding Loop: Editor de Código' class='logo' src='https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhAhvH9upKxyeGU0ifjKJTFWPz7sOI-5XYpE3rd8rlkCD-8G4iK9HXBK25iGT6lnbwQ_opazvBUUyxymxJmpRzfcVBEgR8OBx1mGyvkwllwP6OS9wYW-qw_J_U6KdHa_UYybRHMdVZz9rg6q_8i7LwBUne-QV4ENr4NQBhB-9sbMt5LHA/s1600/white.-logo.webp'/>
-                <h1 class='name'>Coding-Loop</h1>
-            </a>
+  <div class="browser-window" id="main-window-container">
+    <div class="browser-tabs">
+      <div class="browser-tabs-left">
+        <label class="tab-btn ide-toggle-btn" id="btn-ide-toggle" for="chk-toggle-window">
+          <input checked="checked" class="editor-toggle-checkbox" id="chk-toggle-window" title="Marque para mostrar a janela, desmarque para recolher tudo" type="checkbox"/>
+          <span class="tab-text">IDE</span>
+        </label>
+
+        <button aria-label="Alternar tela cheia do IDE" class="maximize-btn" id="btn-maximize-toggle" title="Alternar tela cheia do IDE" type="button">
+          <svg id="icon-maximize" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+          <svg id="icon-minimize" style="display:none;" viewBox="0 0 24 24"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>
+        </button>
+
+        <button aria-label="Importar arquivo HTML, CSS ou JavaScript" class="toolbar-btn" id="btn-import-file" title="Importar arquivo HTML, CSS ou JavaScript" type="button">
+          <svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zM10 16h4V9h4l-6-6-6 6h4v7z"/></svg>
+        </button>
+
+        <button aria-label="Exportar código editado" class="toolbar-btn" id="btn-export-file" title="Exportar código editado" type="button">
+          <svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z"/></svg>
+        </button>
+
+        <input accept=".html,.htm,.css,.js" class="file-input-hidden" id="input-import-file" type="file"/>
+      </div>
+
+      <div class="browser-tabs-right" id="tabs-draggable-container">
+        <div class="tab-btn code-tab" data-target="html-pane" draggable="true">
+          <input checked="checked" class="editor-toggle-checkbox" id="chk-toggle-html" title="Marque para habilitar a aba HTML" type="checkbox"/>
+          <span class="tab-text">HTML</span>
+          <button aria-label="Limpar editor HTML" class="tab-action-btn clear-editor-btn" data-editor="html" draggable="false" title="Limpar HTML" type="button">
+            <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5-1-1h-5l-1 1H5v2h14V4h-3.5z"/></svg>
+          </button>
         </div>
-        <nav>
-            <a href='#'>&lt; Início &gt;</a>
-            <a href='#'>&lt; Sobre &gt;</a>
-            <a class='btn-login' href='#' id='openLogin'> &lt; / Entrar &gt;</a>
-        </nav>
-    </header>
 
-    <!-- Conteúdo Dinâmico da Home -->
-    <main class='hero' id='homeContent'>
-        <h1>Bem-vindo à sua nova plataforma</h1>
-        <p>Crie postagens, compartilhe suas ideias e conecte-se com o mundo de forma simples e rápida.</p>
-    </main>
+        <div class="tab-btn code-tab" data-target="css-pane" draggable="true">
+          <input checked="checked" class="editor-toggle-checkbox" id="chk-toggle-css" title="Marque para habilitar a aba CSS" type="checkbox"/>
+          <span class="tab-text">CSS</span>
+          <button aria-label="Limpar editor CSS" class="tab-action-btn clear-editor-btn" data-editor="css" draggable="false" title="Limpar CSS" type="button">
+            <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5-1-1h-5l-1 1H5v2h14V4h-3.5z"/></svg>
+          </button>
+        </div>
 
-    <!-- Botão de Teste para o Editor HTML -->
-    <div class='container-teste'>
-        <a class='btn-editor-teste' href='https://coding-boot.blogspot.com/p/dashboard.html' id='btnEditorTeste' target='_blank' rel='noopener'>&lt; Abrir HTML Editor /&gt;</a>
+        <div class="tab-btn code-tab" data-target="js-pane" draggable="true">
+          <input checked="checked" class="editor-toggle-checkbox" id="chk-toggle-js" title="Marque para habilitar a aba JavaScript" type="checkbox"/>
+          <span class="tab-text">JavaScript</span>
+          <button aria-label="Limpar editor JavaScript" class="tab-action-btn clear-editor-btn" data-editor="js" draggable="false" title="Limpar JavaScript" type="button">
+            <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5-1-1h-5l-1 1H5v2h14V4h-3.5z"/></svg>
+          </button>
+        </div>
+
+        <label class="tab-btn live-toggle-btn" draggable="false" id="btn-run" for="chk-toggle-preview" title="Marque para habilitar o preview">
+          <input checked="checked" class="editor-toggle-checkbox" id="chk-toggle-preview" title="Marque para habilitar o preview" type="checkbox"/>
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <span class="tab-text" id="run-text">Live</span>
+        </label>
+      </div>
     </div>
 
-    <!-- Modal Unificado -->
-    <div class='modal-overlay' id='loginModal'>
-        <div class='login-card'>
-            <span class='close-btn' id='closeLogin'> &amp;times; </span>
-            
-            <!-- Formulário de Login -->
-            <div id='loginSection'>
-                <h2>Acessar Conta</h2>
-                <form id='loginForm'>
-                    <div class='input-group'>
-                        <label for='email'>E-mail</label>
-                        <input id='email' placeholder='seu@email.com' required='required' type='email'/>
-                     </div>
-                    <div class='input-group'>
-                        <label for='password'>Senha</label>
-                        <input id='password' placeholder='Sua senha' required='required' type='password'/>
-                    </div>
-                    <button class='btn-submit' type='submit'>Entrar</button>
-                </form>
-                <div class='switch-form'>
-                    Não tem uma conta? <a href='#' id='toRegister'>Cadastre-se</a>
-                </div>
-            </div>
-
-            <!-- Formulário de Cadastro (Escondido por padrão) -->
-            <div class='hidden' id='registerSection'>
-                <h2>Criar Conta</h2>
-                <form id='registerForm'>
-                    <div class='input-group'>
-                        <label for='regName'>Nome Completo</label>
-                        <input id='regName' placeholder='Seu nome' required='required' type='text'/>
-                     </div>
-                    <div class='input-group'>
-                        <label for='regEmail'>E-mail</label>
-                        <input id='regEmail' placeholder='seu@email.com' required='required' type='email'/>
-                     </div>
-                    <div class='input-group'>
-                        <label for='regPassword'>Senha</label>
-                        <input id='regPassword' placeholder='Crie uma senha' required='required' type='password'/>
-                    </div>
-                    <button class='btn-submit' type='submit'>Cadastrar</button>
-                </form>
-                <div class='switch-form'>
-                    Já tem uma conta? <a href='#' id='toLogin'>Faça Login</a>
-                </div>
-            </div>
+    <div class="window-content" id="window-content-wrapper">
+      <div class="editors-area" id="editors-container">
+        <div class="tab-pane" id="html-pane">
+          <div class="ace-container" id="html-editor"></div>
         </div>
+
+        <div class="tab-pane" id="css-pane">
+          <div class="ace-container" id="css-editor"></div>
+        </div>
+
+        <div class="tab-pane" id="js-pane">
+          <div class="ace-container" id="js-editor"></div>
+        </div>
+      </div>
+
+      <div class="preview-area" id="preview-container">
+        <div class="preview-controls">
+          <button aria-label="Alternar preview vertical" aria-pressed="false" class="preview-btn preview-btn-square preview-btn-layout" id="btn-preview-layout" title="Alternar preview vertical" type="button">
+            <svg viewBox="0 0 24 24"><path d="M4 5h7v14H4V5zm9 0h7v14h-7V5zM6 7v10h3V7H6zm9 0v10h3V7h-3z"/></svg>
+          </button>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <!-- Script para alternar telas, persistir sessão e efetuar o redirecionamento -->
-    <script type='text/javascript'>
-  
-        const openLoginBtn = document.getElementById('openLogin');
-        const closeLoginBtn = document.getElementById('closeLogin');
-        const loginModal = document.getElementById('loginModal');
-        
-        const loginSection = document.getElementById('loginSection');
-        const registerSection = document.getElementById('registerSection');
-        
-        const toRegister = document.getElementById('toRegister');
-        const toLogin = document.getElementById('toLogin');
-        
-        const loginForm = document.getElementById('loginForm');
-        const registerForm = document.getElementById('registerForm');
-        const homeContent = document.getElementById('homeContent');
-        const btnEditorTeste = document.getElementById('btnEditorTeste');
+  <script type="text/javascript">
+    window.addEventListener('load', function () {
+      var htmlEditor;
+      var cssEditor;
+      var jsEditor;
+      var debounceTimeout;
+      var itemArrastado = null;
 
-        // URL para onde o botão ou o login redirecionará
-        const NOVA_PAGINA_URL = "/p/dashboard.html"; 
+      var mainWindowContainer = document.getElementById('main-window-container');
+      var contentWrapper = document.getElementById('window-content-wrapper');
+      var editorsContainer = document.getElementById('editors-container');
+      var previewContainer = document.getElementById('preview-container');
+      var btnPreviewLayout = document.getElementById('btn-preview-layout');
+      var btnRun = document.getElementById('btn-run');
+      var btnImportFile = document.getElementById('btn-import-file');
+      var btnExportFile = document.getElementById('btn-export-file');
+      var inputImportFile = document.getElementById('input-import-file');
+      var btnIdeToggle = document.getElementById('btn-ide-toggle');
+      var chkToggleWindow = document.getElementById('chk-toggle-window');
+      var btnMaximizeToggle = document.getElementById('btn-maximize-toggle');
+      var iconMaximize = document.getElementById('icon-maximize');
+      var iconMinimize = document.getElementById('icon-minimize');
+      var chkToggleHtml = document.getElementById('chk-toggle-html');
+      var chkToggleCss = document.getElementById('chk-toggle-css');
+      var chkToggleJs = document.getElementById('chk-toggle-js');
+      var chkTogglePreview = document.getElementById('chk-toggle-preview');
+      var dragContainer = document.getElementById('tabs-draggable-container');
 
-        function checkLoginState() {
-            const isLoggedIn = localStorage.getItem('userLoggedIn');
-            const userEmail = localStorage.getItem('userEmail');
-            
-            if (isLoggedIn === 'true') {
-                openLoginBtn.innerHTML = " &lt; / Sair &gt;";
-                if (homeContent) {
-                    const userName = userEmail ? userEmail.split('@')[0] : 'Usuário';
-                    homeContent.innerHTML = `
-                        <h1>Olá, ${userName}!</h1>
-                        <p>Você está conectado com sucesso ao sistema.</p>
-                    `;
-                }
-            } else {
-                openLoginBtn.innerHTML = " &lt; / Entrar &gt;";
-            }
+      function criarEditor(id, modo, valorInicial) {
+        var editor = ace.edit(id);
+        editor.setTheme('ace/theme/solarized_dark');
+        editor.session.setMode(modo);
+        editor.setShowPrintMargin(false);
+        editor.setOption('wrap', true);
+        editor.setFontSize('14px');
+        editor.setValue(valorInicial, -1);
+        return editor;
+      }
+
+      htmlEditor = criarEditor(
+        'html-editor',
+        'ace/mode/html',
+        '<h1>Código pronto!</h1>\n<p>Edite HTML, CSS e JavaScript para ver o resultado em tempo real.</p>'
+      );
+
+      cssEditor = criarEditor(
+        'css-editor',
+        'ace/mode/css',
+        'body {\n  padding: 20px;\n  font-family: sans-serif;\n  background: #f4f4f9;\n}\n\nh1 {\n  color: #2ea043;\n}'
+      );
+
+      jsEditor = criarEditor(
+        'js-editor',
+        'ace/mode/javascript',
+        'console.log("Executado em tempo real!");'
+      );
+
+      function redimensionarEditores() {
+        [htmlEditor, cssEditor, jsEditor].forEach(function (editor) {
+          if (editor) {
+            editor.resize();
+          }
+        });
+      }
+
+      function alternarIcones(iconeExpandir, iconeRecolher, expandido) {
+        iconeExpandir.style.display = expandido ? 'none' : 'block';
+        iconeRecolher.style.display = expandido ? 'block' : 'none';
+      }
+
+      function escaparFechamentoScript(codigo) {
+        return codigo.replace(/<\/script>/gi, '<\\/script>');
+      }
+
+      function removerIframePreview() {
+        var antigoIframe = document.getElementById('preview-output');
+        if (antigoIframe) {
+          antigoIframe.remove();
+        }
+      }
+
+      function montarCodigoPreview() {
+        var html = htmlEditor.getValue();
+        var css = cssEditor.getValue();
+        var js = escaparFechamentoScript(jsEditor.getValue());
+
+        return '<!DOCTYPE html>\n' +
+          '<html>\n' +
+          '<head>\n' +
+          '<meta charset="UTF-8">\n' +
+          '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
+          '<style>\n' + css + '\n</style>\n' +
+          '</head>\n' +
+          '<body>\n' + html + '\n' +
+          '<script>\n' + js + '\n<' + '/script>\n' +
+          '</body>\n' +
+          '</html>';
+      }
+
+      function obterEditorPorTipo(tipo) {
+        if (tipo === 'html') {
+          return htmlEditor;
         }
 
-        checkLoginState();
-
-        // Ação do Botão HTML Editor de Teste
-        if (btnEditorTeste) {
-            btnEditorTeste.addEventListener('click', () => {
-                // Redireciona diretamente para a URL desejada
-                window.location.href = NOVA_PAGINA_URL;
-            });
+        if (tipo === 'css') {
+          return cssEditor;
         }
 
-        openLoginBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (openLoginBtn.innerText.includes("Sair")) {
-                localStorage.removeItem('userLoggedIn');
-                localStorage.removeItem('userEmail');
-                window.location.href = "/"; 
-            } else {
-                loginModal.classList.add('active');
-            }
-        });
-
-        closeLoginBtn.addEventListener('click', () => {
-            loginModal.classList.remove('active');
-        });
-
-        loginModal.addEventListener('click', (e) => {
-            if (e.target === loginModal) {
-                loginModal.classList.remove('active');
-            }
-        });
-
-        toRegister.addEventListener('click', (e) => {
-            e.preventDefault();
-            loginSection.classList.add('hidden');
-            registerSection.classList.remove('hidden');
-        });
-
-        toLogin.addEventListener('click', (e) => {
-            e.preventDefault();
-            registerSection.classList.add('hidden');
-            loginSection.classList.remove('hidden');
-        });
-
-        function handleAuth(email) {
-            localStorage.setItem('userLoggedIn', 'true');
-            localStorage.setItem('userEmail', email);
-            loginModal.classList.remove('active');
-            window.location.href = NOVA_PAGINA_URL;
+        if (tipo === 'js') {
+          return jsEditor;
         }
 
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            handleAuth(email);
+        return null;
+      }
+
+      function limparEditor(tipo, nome) {
+        var editor = obterEditorPorTipo(tipo);
+        if (!editor) {
+          return;
+        }
+
+        if (!window.confirm('Tem certeza que deseja limpar o editor ' + nome + '?')) {
+          return;
+        }
+
+        editor.setValue('', -1);
+        agendarAtualizacaoPreview();
+      }
+
+      function liberarFocoBotaoLimpar(botao) {
+        botao.blur();
+        botao.classList.add('clear-feedback');
+
+        setTimeout(function () {
+          botao.classList.remove('clear-feedback');
+        }, 700);
+      }
+
+      function importarArquivo(file) {
+        if (!file) {
+          return;
+        }
+
+        var nome = file.name.toLowerCase();
+        var tipo = '';
+
+        if (nome.endsWith('.html') || nome.endsWith('.htm')) {
+          tipo = 'html';
+        } else if (nome.endsWith('.css')) {
+          tipo = 'css';
+        } else if (nome.endsWith('.js')) {
+          tipo = 'js';
+        }
+
+        if (!tipo) {
+          window.alert('Selecione um arquivo .html, .css ou .js.');
+          return;
+        }
+
+        var reader = new FileReader();
+        reader.onload = function () {
+          var editor = obterEditorPorTipo(tipo);
+          if (editor) {
+            editor.setValue(String(reader.result || ''), -1);
+            abrirJanela();
+            atualizarLayoutAbas();
+            agendarAtualizacaoPreview();
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      function exportarArquivo() {
+        var conteudo = montarCodigoPreview();
+        var blob = new Blob([conteudo], { type: 'text/html;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement('a');
+
+        link.href = url;
+        link.download = 'codigo-editado.html';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setTimeout(function () {
+          URL.revokeObjectURL(url);
+        }, 1000);
+      }
+
+      function renderizarPreview() {
+        removerIframePreview();
+
+        var novoIframe = document.createElement('iframe');
+        novoIframe.className = 'preview-iframe';
+        novoIframe.id = 'preview-output';
+        novoIframe.title = 'Preview do código';
+        novoIframe.setAttribute('sandbox', 'allow-scripts');
+        novoIframe.setAttribute('referrerpolicy', 'no-referrer');
+
+        previewContainer.appendChild(novoIframe);
+        novoIframe.srcdoc = montarCodigoPreview();
+      }
+
+      function atualizarJanela() {
+        var aberta = chkToggleWindow.checked;
+        mainWindowContainer.classList.toggle('is-collapsed', !aberta);
+        contentWrapper.classList.toggle('hide-entire-window', !aberta);
+        btnIdeToggle.classList.toggle('window-open', aberta);
+
+        if (!aberta) {
+          mainWindowContainer.classList.remove('is-fullscreen');
+          alternarIcones(iconMaximize, iconMinimize, false);
+        }
+
+        setTimeout(redimensionarEditores, 50);
+      }
+
+      function abrirJanela() {
+        if (!chkToggleWindow.checked) {
+          chkToggleWindow.checked = true;
+          atualizarJanela();
+        }
+      }
+
+      function mostrarPreview() {
+        abrirJanela();
+        chkTogglePreview.checked = true;
+        btnRun.classList.add('active');
+        contentWrapper.classList.add('with-preview');
+        previewContainer.classList.add('show-preview');
+        renderizarPreview();
+        setTimeout(redimensionarEditores, 50);
+        aplicarProporcaoVertical();
+      }
+
+      function fecharPreview() {
+        chkTogglePreview.checked = false;
+        btnRun.classList.remove('active');
+        removerIframePreview();
+        previewContainer.classList.remove('show-preview');
+        contentWrapper.classList.remove('with-preview');
+        setTimeout(redimensionarEditores, 50);
+        aplicarProporcaoVertical();
+      }
+
+      function atualizarBotaoLayoutPreview() {
+        var modoVertical = contentWrapper.classList.contains('preview-vertical');
+        btnPreviewLayout.classList.toggle('is-active', modoVertical);
+        btnPreviewLayout.setAttribute('aria-pressed', modoVertical ? 'true' : 'false');
+        btnPreviewLayout.title = modoVertical ? 'Voltar preview horizontal' : 'Alternar preview vertical';
+        btnPreviewLayout.setAttribute('aria-label', modoVertical ? 'Voltar preview horizontal' : 'Alternar preview vertical');
+      }
+
+      function aplicarProporcaoVertical() {
+        var panesVisiveis = Array.prototype.slice.call(
+          editorsContainer.querySelectorAll('.tab-pane.show-pane')
+        );
+        var previewVisivel = previewContainer.classList.contains('show-preview');
+
+        if (!contentWrapper.classList.contains('preview-vertical')) {
+          panesVisiveis.forEach(function (pane) {
+            pane.style.flexBasis = '';
+          });
+          previewContainer.style.flexBasis = '';
+          return;
+        }
+
+        var total = panesVisiveis.length + (previewVisivel ? 1 : 0);
+
+        if (total === 0) {
+          return;
+        }
+
+        var percentual = (100 / total) + '%';
+
+        panesVisiveis.forEach(function (pane) {
+          pane.style.flexBasis = percentual;
         });
 
-        registerForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('regEmail').value;
-            handleAuth(email);
+        if (previewVisivel) {
+          previewContainer.style.flexBasis = percentual;
+        }
+      }
+
+      function agendarAtualizacaoPreview() {
+        if (!chkToggleWindow.checked || !chkTogglePreview.checked || !previewContainer.classList.contains('show-preview')) {
+          return;
+        }
+
+        clearTimeout(debounceTimeout);
+        debounceTimeout = setTimeout(function () {
+          renderizarPreview();
+        }, 300);
+      }
+
+      function obterAbasOrdenadas() {
+        return Array.prototype.slice.call(dragContainer.querySelectorAll('.code-tab'));
+      }
+
+      function abaEstaAtiva(idPane) {
+        return (idPane === 'html-pane' && chkToggleHtml.checked) ||
+          (idPane === 'css-pane' && chkToggleCss.checked) ||
+          (idPane === 'js-pane' && chkToggleJs.checked);
+      }
+
+      function atualizarLayoutAbas() {
+        var idsAtivos = [];
+
+        obterAbasOrdenadas().forEach(function (aba) {
+          var target = aba.getAttribute('data-target');
+          var ativa = abaEstaAtiva(target);
+
+          aba.classList.toggle('active', ativa);
+          if (ativa) {
+            idsAtivos.push(target);
+          }
         });
-   
-    </script>
-      
+
+        editorsContainer.classList.remove('split-2', 'split-3');
+
+        Array.prototype.slice.call(editorsContainer.querySelectorAll('.tab-pane')).forEach(function (pane) {
+          pane.classList.remove('show-pane');
+          pane.style.flexBasis = '';
+        });
+
+        idsAtivos.forEach(function (idPane) {
+          var pane = document.getElementById(idPane);
+          if (pane) {
+            editorsContainer.appendChild(pane);
+            pane.classList.add('show-pane');
+          }
+        });
+
+        if (idsAtivos.length === 2) {
+          editorsContainer.classList.add('split-2');
+        }
+
+        if (idsAtivos.length === 3) {
+          editorsContainer.classList.add('split-3');
+        }
+
+        setTimeout(redimensionarEditores, 50);
+        aplicarProporcaoVertical();
+      }
+
+      [htmlEditor, cssEditor, jsEditor].forEach(function (editor) {
+        editor.on('change', agendarAtualizacaoPreview);
+      });
+
+      chkToggleWindow.addEventListener('change', function () {
+        atualizarJanela();
+        atualizarLayoutAbas();
+      });
+
+      [chkToggleHtml, chkToggleCss, chkToggleJs].forEach(function (checkbox) {
+        checkbox.addEventListener('change', function () {
+          abrirJanela();
+          atualizarLayoutAbas();
+        });
+      });
+
+      Array.prototype.slice.call(document.querySelectorAll('.code-tab')).forEach(function (aba) {
+        aba.addEventListener('click', function (e) {
+          if (e.target.closest('button') || e.target.tagName === 'INPUT') {
+            return;
+          }
+
+          var checkbox = aba.querySelector('.editor-toggle-checkbox');
+          if (checkbox) {
+            checkbox.checked = !checkbox.checked;
+            checkbox.dispatchEvent(new Event('change'));
+          }
+        });
+      });
+
+      Array.prototype.slice.call(document.querySelectorAll('.clear-editor-btn')).forEach(function (botao) {
+        botao.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          limparEditor(botao.getAttribute('data-editor'), botao.getAttribute('data-editor').toUpperCase());
+          liberarFocoBotaoLimpar(botao);
+        });
+      });
+
+      btnImportFile.addEventListener('click', function () {
+        inputImportFile.click();
+      });
+
+      inputImportFile.addEventListener('change', function () {
+        importarArquivo(inputImportFile.files[0]);
+        inputImportFile.value = '';
+      });
+
+      btnExportFile.addEventListener('click', exportarArquivo);
+
+      chkTogglePreview.addEventListener('change', function () {
+        if (chkTogglePreview.checked) {
+          mostrarPreview();
+        } else {
+          fecharPreview();
+        }
+      });
+
+      btnMaximizeToggle.addEventListener('click', function () {
+        abrirJanela();
+        var telaCheia = mainWindowContainer.classList.toggle('is-fullscreen');
+        alternarIcones(iconMaximize, iconMinimize, telaCheia);
+        setTimeout(redimensionarEditores, 150);
+      });
+
+      btnPreviewLayout.addEventListener('click', function () {
+        abrirJanela();
+        contentWrapper.classList.toggle('preview-vertical');
+        atualizarBotaoLayoutPreview();
+        aplicarProporcaoVertical();
+        setTimeout(redimensionarEditores, 150);
+      });
+
+      dragContainer.addEventListener('dragstart', function (e) {
+        var aba = e.target.closest('.code-tab[draggable="true"]');
+        if (!aba) {
+          e.preventDefault();
+          return;
+        }
+
+        itemArrastado = aba;
+        aba.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+
+      dragContainer.addEventListener('dragover', function (e) {
+        var abaAlvo = e.target.closest('.code-tab[draggable="true"]');
+        if (!abaAlvo || abaAlvo === itemArrastado) {
+          return;
+        }
+
+        e.preventDefault();
+
+        var limites = abaAlvo.getBoundingClientRect();
+        var passouDoMeio = (e.clientX - limites.left) > limites.width / 2;
+
+        if (passouDoMeio) {
+          abaAlvo.after(itemArrastado);
+        } else {
+          abaAlvo.before(itemArrastado);
+        }
+      });
+
+      dragContainer.addEventListener('drop', function (e) {
+        e.preventDefault();
+      });
+
+      dragContainer.addEventListener('dragend', function () {
+        if (itemArrastado) {
+          itemArrastado.classList.remove('dragging');
+          itemArrastado = null;
+        }
+
+        atualizarLayoutAbas();
+      });
+
+      atualizarJanela();
+      atualizarLayoutAbas();
+      atualizarBotaoLayoutPreview();
+      if (chkTogglePreview.checked) {
+        mostrarPreview();
+      }
+      setTimeout(redimensionarEditores, 100);
+    });
+  </script>
 </body>
 </html>
